@@ -439,10 +439,6 @@ export function BasicForm({
 
         <section className="hero basic-form-hero">
 
-          <div className="eyebrow">
-            Actividad RT-03
-          </div>
-
           <h1>
             {title}
           </h1>
