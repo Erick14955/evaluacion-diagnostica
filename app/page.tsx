@@ -1,9 +1,34 @@
 import Link from 'next/link';
 
 const items = [
-  { href: '/expectativas', title: 'Expectativas', text: 'Comparte qué esperas obtener o aprender durante la actividad.' },
-  { href: '/acuerdos', title: 'Acuerdos', text: 'Registra los compromisos y acuerdos para el desarrollo de la actividad.' },
-  { href: '/criterios', title: 'Criterios', text: 'Valora del 1 al 5 tu nivel actual en los cinco criterios del RT-03.' }
+  {
+    href: '/expectativas',
+    title: 'Expectativas',
+    text: 'Comparte qué esperas obtener o aprender durante la actividad.'
+  },
+  {
+    href: '/acuerdos',
+    title: 'Acuerdos',
+    text: 'Registra los compromisos y acuerdos para el desarrollo de la actividad.'
+  },
+  {
+    href: '/criterios',
+    title: 'Criterios',
+    text: 'Valora del 1 al 5 tu nivel actual en los cinco criterios del RT-03.'
+  }
+];
+
+const presentacionItems = [
+  {
+    href: '/Presentacion/expectativas',
+    title: 'Presentación · Expectativas',
+    text: 'Visualiza en vivo las expectativas registradas por los participantes.'
+  },
+  {
+    href: '/Presentacion/acuerdos',
+    title: 'Presentación · Acuerdos',
+    text: 'Visualiza en vivo los acuerdos y compromisos registrados.'
+  }
 ];
 
 export default function Home() {
@@ -11,15 +36,57 @@ export default function Home() {
     <main className="container">
       <section className="hero">
         <div className="eyebrow">Módulo 1 · RT-03</div>
+
         <h1>Bienvenido/a</h1>
-        <p className="lead">Completa las actividades desde tu celular. Tu identificación se guarda en este dispositivo para que no tengas que volver a escribir tu nombre en cada formulario.</p>
+
+        <p className="lead">
+          Completa las actividades desde tu celular. Tu identificación se
+          guarda en este dispositivo para que no tengas que volver a escribir
+          tu nombre en cada formulario.
+        </p>
       </section>
+
       <section className="grid" aria-label="Formularios">
         {items.map((item) => (
-          <Link key={item.href} href={item.href} className="card card-link">
+          <Link
+            key={item.href}
+            href={item.href}
+            className="card card-link"
+          >
             <h3>{item.title}</h3>
+
             <p>{item.text}</p>
+
             <strong>Entrar →</strong>
+          </Link>
+        ))}
+      </section>
+
+      <section style={{ marginTop: '3rem' }}>
+        <div className="eyebrow">Presentación</div>
+
+        <h2 style={{ marginBottom: '0.5rem' }}>
+          Visualización en vivo
+        </h2>
+
+        <p className="lead">
+          Estas vistas permiten proyectar en pantalla las respuestas de los
+          participantes mientras se registran.
+        </p>
+      </section>
+
+      <section className="grid" aria-label="Presentaciones">
+        {presentacionItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="card card-link"
+          >
+            <h3>{item.title}</h3>
+
+            <p>{item.text}</p>
+
+            <strong>Ver presentación →</strong>
           </Link>
         ))}
       </section>

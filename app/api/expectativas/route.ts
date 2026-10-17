@@ -4,10 +4,44 @@ import { pool } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const participanteId =
-      request.nextUrl.searchParams.get(
-        'participante_id'
-      );
+      request.nextUrl.searchParams.get('participante_id');
 
+    const presentacion =
+      request.nextUrl.searchParams.get('presentacion');
+
+    // ============================================
+    // PRESENTACIÓN EN VIVO
+    // ============================================
+    if (presentacion === 'true') {
+      const result = await pool.query(`
+        SELECT
+          e."Expectativa_Id" AS id,
+          e."Participante_Id" AS participante_id,
+          e."Expectativa" AS expectativa,
+          p."Nombre" AS nombre
+        FROM "Expectativas" e
+        LEFT JOIN "Participantes" p
+          ON p."id" = e."Participante_Id"
+        ORDER BY e."Expectativa_Id" DESC
+      `);
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: result.rows
+        },
+        {
+          headers: {
+            'Cache-Control':
+              'no-store, no-cache, must-revalidate'
+          }
+        }
+      );
+    }
+
+    // ============================================
+    // CONSULTA INDIVIDUAL DEL PARTICIPANTE
+    // ============================================
     if (
       !participanteId ||
       participanteId.trim() === ''
@@ -43,6 +77,7 @@ export async function GET(request: NextRequest) {
       exists: true,
       expectativa: result.rows[0].expectativa
     });
+
   } catch (error) {
     console.error(
       'Error obteniendo expectativa:',
@@ -66,6 +101,9 @@ export async function POST(request: NextRequest) {
       texto
     } = await request.json();
 
+    // ============================================
+    // VALIDAR PARTICIPANTE
+    // ============================================
     if (
       typeof participante_id !== 'string' ||
       participante_id.trim() === ''
@@ -78,38 +116,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const expectativa = String(
-      texto ?? ''
-    ).trim();
+    // ============================================
+    // VALIDAR EXPECTATIVA
+    // ============================================
+    const expectativa =
+      String(texto ?? '').trim();
 
     if (!expectativa) {
       return NextResponse.json(
         {
-          error: 'Completa todos los campos.'
+          error:
+            'Completa todos los campos.'
         },
         { status: 400 }
       );
     }
 
-    /*
-     * Verificamos si el participante
-     * ya tiene una expectativa.
-     */
-    const existing = await pool.query(
-      `
-        SELECT
-          "Expectativa_Id"
-        FROM "Expectativas"
-        WHERE "Participante_Id" = $1
-        LIMIT 1
-      `,
-      [participante_id]
-    );
+    // ============================================
+    // EVITAR DUPLICADOS
+    // ============================================
+    const existing =
+      await pool.query(
+        `
+          SELECT
+            "Expectativa_Id"
+          FROM "Expectativas"
+          WHERE "Participante_Id" = $1
+          LIMIT 1
+        `,
+        [participante_id]
+      );
 
-    /*
-     * Si ya existe, no permitimos
-     * sobrescribirla.
-     */
     if (existing.rows.length > 0) {
       return NextResponse.json(
         {
@@ -120,6 +157,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ============================================
+    // GUARDAR EXPECTATIVA
+    // ============================================
     await pool.query(
       `
         INSERT INTO "Expectativas"
@@ -128,7 +168,10 @@ export async function POST(request: NextRequest) {
           "Expectativa"
         )
         VALUES
-        ($1, $2)
+        (
+          $1,
+          $2
+        )
       `,
       [
         participante_id,
@@ -141,6 +184,7 @@ export async function POST(request: NextRequest) {
       message:
         'La expectativa fue guardada correctamente.'
     });
+
   } catch (error) {
     console.error(
       'Error guardando expectativa:',

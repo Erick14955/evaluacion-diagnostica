@@ -4,38 +4,70 @@ import { pool } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const participanteId =
-      request.nextUrl.searchParams.get(
-        'participante_id'
-      );
+      request.nextUrl.searchParams.get('participante_id');
 
+    const presentacion =
+      request.nextUrl.searchParams.get('presentacion');
+
+    // ============================================
+    // PRESENTACIÓN EN VIVO
+    // ============================================
+    if (presentacion === 'true') {
+      const result = await pool.query(`
+        SELECT
+          a."Acuerdos_Id" AS id,
+          a."Participante_Id" AS participante_id,
+          a."Acuerdos" AS acuerdo,
+          p."Nombre" AS nombre
+        FROM "Acuerdos_Compromisos" a
+        LEFT JOIN "Participantes" p
+          ON p."id" = a."Participante_Id"
+        ORDER BY a."Acuerdos_Id" DESC
+      `);
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: result.rows
+        },
+        {
+          headers: {
+            'Cache-Control':
+              'no-store, no-cache, must-revalidate'
+          }
+        }
+      );
+    }
+
+    // ============================================
+    // CONSULTA INDIVIDUAL DEL PARTICIPANTE
+    // ============================================
     if (
       !participanteId ||
       participanteId.trim() === ''
     ) {
       return NextResponse.json(
         {
-          error: 'Participante inválido.'
+          error:
+            'Participante inválido.'
         },
         { status: 400 }
       );
     }
 
-    const result = await pool.query(
-      `
-        SELECT
-          "Acuerdos_Id" AS id,
-          "Acuerdos" AS acuerdo
-        FROM "Acuerdos_Compromisos"
-        WHERE "Participante_Id" = $1
-        LIMIT 1
-      `,
-      [participanteId]
-    );
+    const result =
+      await pool.query(
+        `
+          SELECT
+            "Acuerdos_Id" AS id,
+            "Acuerdos" AS acuerdo
+          FROM "Acuerdos_Compromisos"
+          WHERE "Participante_Id" = $1
+          LIMIT 1
+        `,
+        [participanteId]
+      );
 
-    /*
-     * El participante todavía no tiene
-     * un acuerdo registrado.
-     */
     if (result.rows.length === 0) {
       return NextResponse.json({
         exists: false,
@@ -43,12 +75,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    /*
-     * El participante ya tiene un acuerdo.
-     */
     return NextResponse.json({
       exists: true,
-      acuerdo: result.rows[0].acuerdo
+      acuerdo:
+        result.rows[0].acuerdo
     });
 
   } catch (error) {
@@ -67,36 +97,38 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(
-  request: NextRequest
-) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body =
+      await request.json();
 
     const participanteId =
       body.participante_id;
 
     const acuerdo =
-      String(body.texto ?? '').trim();
+      String(
+        body.texto ?? ''
+      ).trim();
 
-    /*
-     * Validar participante.
-     */
+    // ============================================
+    // VALIDAR PARTICIPANTE
+    // ============================================
     if (
       typeof participanteId !== 'string' ||
       participanteId.trim() === ''
     ) {
       return NextResponse.json(
         {
-          error: 'Participante inválido.'
+          error:
+            'Participante inválido.'
         },
         { status: 400 }
       );
     }
 
-    /*
-     * Validar acuerdo.
-     */
+    // ============================================
+    // VALIDAR ACUERDO
+    // ============================================
     if (!acuerdo) {
       return NextResponse.json(
         {
@@ -107,26 +139,22 @@ export async function POST(
       );
     }
 
-    /*
-     * Verificar si ya existe un acuerdo
-     * para este participante.
-     */
-    const existing = await pool.query(
-      `
-        SELECT
-          "Acuerdos_Id" AS id,
-          "Acuerdos" AS acuerdo
-        FROM "Acuerdos_Compromisos"
-        WHERE "Participante_Id" = $1
-        LIMIT 1
-      `,
-      [participanteId]
-    );
+    // ============================================
+    // EVITAR DUPLICADOS
+    // ============================================
+    const existing =
+      await pool.query(
+        `
+          SELECT
+            "Acuerdos_Id" AS id,
+            "Acuerdos" AS acuerdo
+          FROM "Acuerdos_Compromisos"
+          WHERE "Participante_Id" = $1
+          LIMIT 1
+        `,
+        [participanteId]
+      );
 
-    /*
-     * Si ya existe, no permitimos
-     * registrar otro.
-     */
     if (existing.rows.length > 0) {
       return NextResponse.json(
         {
@@ -140,9 +168,9 @@ export async function POST(
       );
     }
 
-    /*
-     * Insertar el nuevo acuerdo.
-     */
+    // ============================================
+    // GUARDAR ACUERDO
+    // ============================================
     await pool.query(
       `
         INSERT INTO "Acuerdos_Compromisos"
