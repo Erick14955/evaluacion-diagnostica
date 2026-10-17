@@ -28,6 +28,16 @@ const presentacionItems = [
     href: '/Presentacion/acuerdos',
     title: 'Presentación · Acuerdos',
     text: 'Visualiza en vivo los acuerdos y compromisos registrados.'
+  },
+  {
+    href: '/Presentacion/lista-cotejo',
+    title: 'Presentación · Lista de cotejo',
+    text: 'Visualiza en vivo los resultados de la lista de cotejo.'
+  },
+  {
+    href: '/Presentacion/comunidades',
+    title: 'Presentación · Comunidades de aprendizaje',
+    text: 'Visualiza en vivo la conformación de las comunidades de aprendizaje.'
   }
 ];
 
